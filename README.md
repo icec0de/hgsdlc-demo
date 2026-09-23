@@ -78,3 +78,9 @@ shared/                   all state, created at runtime (make reset deletes it)
 - **Deviations from a stock install:** the flow is team-scoped, so it's published straight to the framework DB without a git catalog or PR. The SCM provider is a placeholder whose host (`webapp`) matches the `git://` repo URL. The framework applies credentials only to http(s) remotes.
 
 The design, decisions and scope are in [spec.md](spec.md).
+
+## License
+
+Copyright 2026 icec0de. Licensed under the [Apache License 2.0](LICENSE).
+
+The framework in `hgsdlc/` is a separate project ([Human Guided SDLC](https://gitverse.ru/kakvsbere/hgsdlc)), also under Apache 2.0.
