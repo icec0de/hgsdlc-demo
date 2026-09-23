@@ -191,11 +191,44 @@ scope decisions
 	prototype v1 skipped spec-driven artifacts
 		only a run-scoped change-summary.md
 		replaced by the spec-driven flow: delta spec per task, merged into a master spec
-	lightweight format instead of the full openspec cycle from the framework catalog
-		no proposal / design / tasks documents, no human gates
-		resembles openspec (delta format, merge into master) and spec kit (numbered folders, constitution = governance.md)
+	goal was to demonstrate how the framework operates, not to reconstruct openspec precisely
+		spec format borrows openspec vocabulary because it is a good, known vocabulary
+		process and rigor were kept light on purpose, see comparison below
 	no human approval gate in the flow, runs are fully automatic
 		human control is the manual move to to do and the need review column
+		this is the main place this workflow is NOT human-guided in the openspec sense, see below
+
+relationship to openspec
+	close to openspec: spec format and vocabulary
+		specs/master.md as source of truth, specs/changes/<id>/delta.md as a delta
+		delta sections ADDED / MODIFIED / REMOVED Requirements (RENAMED is not used)
+		### Requirement: ... SHALL ..., #### Scenario: ... WHEN / THEN, same wording
+		MODIFIED repeats the full new text of the requirement, same rule as openspec
+		archive-like step: merge-spec + record-increment merges the delta and snapshots master
+		baseline spec (T-0000) generated once from the pre-existing app, like adopting openspec on a brownfield repo
+	far from openspec: process
+		openspec's core discipline is agreeing the delta BEFORE code is written
+			human reads proposal.md + delta, approves or asks for changes, then implementation starts
+		this workflow only gets human sign-off on the one-line intent (drag to to do)
+			specify, write-tests, implement all run inside the same automatic pass
+			delta.md ends up documenting what the ai decided, not what a human agreed to
+		no proposal.md (why) or design.md (how) or tasks.md (checklist), only delta.md (what)
+		merge-spec is done by an ai rewriting master.md, not a deterministic header-based merge
+			openspec archive merges mechanically by requirement name
+			risk: the model could reword or drop an untouched requirement, only checked by task id presence
+		one master.md instead of one spec file per capability
+		no spec structure validation (openspec validate --strict equivalent)
+	beyond openspec: verification this workflow adds
+		every scenario becomes a playwright test before implementation, kept as a regression suite
+		specs/governance.md is a constitution (spec-kit idea) enforced by code the ai cannot edit
+		validation.md / validation.json record, per task, which principles applied and how they were checked
+		task ids link the tracker, the spec folder, the tests and the commit git history one to one
+	verdict
+		spec format and merge idea: close to openspec
+		process discipline (approve-before-code): not followed, by choice, for this prototype
+		verification (tests, governance, evidence): goes beyond what openspec itself defines
+		to make it more openspec-like: add a human approval gate on the delta before write-tests /
+		implement, and replace the ai merge with a deterministic one; deliberately left undone here
 
 persistence
 	all state on disk in `./shared`
