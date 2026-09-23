@@ -25,12 +25,14 @@
   button { font: inherit; font-weight: 600; padding: 10px 20px; border: 0; border-radius: 8px;
     background: var(--accent); color: #fff; cursor: pointer; height: 42px; }
   .board { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; padding: 0 28px 28px; }
-  .col { background: #eceef2; border-radius: 12px; padding: 12px; min-height: 60vh; transition: background .15s, box-shadow .15s; }
+  .board { transition: grid-template-columns .25s ease; }
+  .col { background: #eceef2; border-radius: 12px; padding: 12px; min-height: 60vh; min-width: 0; transition: background .15s, box-shadow .15s; }
+  .col.is-empty .hint { font-size: 11px; }
   .col.over { background: #e1e8f7; box-shadow: inset 0 0 0 2px var(--accent); }
   .col.locked .list { min-height: 40px; }
   .hint { margin: -6px 4px 10px; font-size: 12px; color: var(--muted); }
   .col h2 { margin: 4px 4px 12px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
-    display: flex; align-items: center; gap: 8px; }
+    display: flex; align-items: center; gap: 8px; white-space: nowrap; }
   .col h2::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
   .col h2 span { color: var(--muted); font-weight: 500; }
   .card { background: var(--panel); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px;
@@ -336,8 +338,26 @@ async function refresh() {
       : a.created_at.localeCompare(b.created_at));
     col.querySelector('.list').innerHTML = list.map(card).join('');
     col.querySelector('h2 span').textContent = list.length || '';
+    col.classList.toggle('is-empty', !list.length);
   });
+  layout();
 }
+
+// adaptive widths: empty columns stay narrow, columns with cards share the rest (each <= 40% of the screen)
+const NARROW = 175, MIN_FULL = 240, MAX_SHARE = 0.4;
+function layout() {
+  const board = document.querySelector('.board');
+  if (innerWidth < 800) { board.style.gridTemplateColumns = ''; return; }  // phone: one column (css)
+  const cols = [...board.querySelectorAll('.col')];
+  const full = cols.filter(c => !c.classList.contains('is-empty')).length;
+  if (!full) { board.style.gridTemplateColumns = `repeat(${cols.length}, minmax(0, 1fr))`; return; }
+  const cs = getComputedStyle(board);
+  const inner = board.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
+    - parseFloat(cs.columnGap) * (cols.length - 1);
+  const each = Math.max(MIN_FULL, Math.min((inner - NARROW * (cols.length - full)) / full, innerWidth * MAX_SHARE));
+  board.style.gridTemplateColumns = cols.map(c => c.classList.contains('is-empty') ? `${NARROW}px` : `${Math.floor(each)}px`).join(' ');
+}
+addEventListener('resize', layout);
 refresh();
 setInterval(refresh, 2000);
 </script>
