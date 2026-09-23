@@ -343,19 +343,16 @@ async function refresh() {
   layout();
 }
 
-// adaptive widths: empty columns stay narrow, columns with cards share the rest (each <= 40% of the screen)
-const NARROW = 175, MIN_FULL = 240, MAX_SHARE = 0.4;
+// adaptive widths: empty columns stay narrow, columns with cards share all the remaining width,
+// so the board always spans the screen edge to edge
+const NARROW = 175, MIN_FULL = 240;
 function layout() {
   const board = document.querySelector('.board');
   if (innerWidth < 800) { board.style.gridTemplateColumns = ''; return; }  // phone: one column (css)
   const cols = [...board.querySelectorAll('.col')];
   const full = cols.filter(c => !c.classList.contains('is-empty')).length;
-  if (!full) { board.style.gridTemplateColumns = `repeat(${cols.length}, minmax(0, 1fr))`; return; }
-  const cs = getComputedStyle(board);
-  const inner = board.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
-    - parseFloat(cs.columnGap) * (cols.length - 1);
-  const each = Math.max(MIN_FULL, Math.min((inner - NARROW * (cols.length - full)) / full, innerWidth * MAX_SHARE));
-  board.style.gridTemplateColumns = cols.map(c => c.classList.contains('is-empty') ? `${NARROW}px` : `${Math.floor(each)}px`).join(' ');
+  board.style.gridTemplateColumns = cols.map(c => !full || !c.classList.contains('is-empty')
+    ? `minmax(${full ? MIN_FULL : 0}px, 1fr)` : `${NARROW}px`).join(' ');
 }
 addEventListener('resize', layout);
 refresh();
