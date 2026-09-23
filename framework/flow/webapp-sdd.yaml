@@ -1,6 +1,6 @@
 id: webapp-sdd
-version: "3.0"
-canonical_name: webapp-sdd@3.0
+version: "5.0"
+canonical_name: webapp-sdd@5.0
 title: Spec-driven web app change from the task board
 description: |
   Takes a human intent from the task board, records it as a delta spec,
@@ -18,13 +18,7 @@ nodes:
     title: Prepare specs and tests folders
     type: command
     instruction: |
-      set -e
-      mkdir -p specs/changes tests
-      if [ ! -f specs/governance.md ]; then
-        cp /app/checks/governance.md specs/governance.md
-        echo "seeded specs/governance.md"
-      fi
-      echo "governance principles:"; grep -E '^\| G-' specs/governance.md | cut -d'|' -f2,3
+      /app/checks/prepare.sh
     execution_context: []
     produced_artifacts: []
     expected_mutations: []
@@ -35,6 +29,14 @@ nodes:
     title: Write the delta spec
     type: ai
     routing_type: static
+    retry_policy:
+      attempts: 1
+      on_errors:
+        - NODE_VALIDATION_FAILED
+        - NODE_SUMMARY_VALIDATION_FAILED
+        - AGENT_EXECUTION_FAILED
+        - ACP_TIMEOUT
+        - ACP_REQUEST_FAILED
     execution_context: []
     instruction: |
       You maintain the specification of a small client-facing static web app
@@ -112,6 +114,14 @@ nodes:
     title: Write tests for the delta scenarios
     type: ai
     routing_type: static
+    retry_policy:
+      attempts: 1
+      on_errors:
+        - NODE_VALIDATION_FAILED
+        - NODE_SUMMARY_VALIDATION_FAILED
+        - AGENT_EXECUTION_FAILED
+        - ACP_TIMEOUT
+        - ACP_REQUEST_FAILED
     execution_context: []
     instruction: |
       Write automated browser tests for task ${env.TASK_ID} BEFORE it is implemented.
@@ -147,6 +157,14 @@ nodes:
     title: Implement the delta spec
     type: ai
     routing_type: static
+    retry_policy:
+      attempts: 1
+      on_errors:
+        - NODE_VALIDATION_FAILED
+        - NODE_SUMMARY_VALIDATION_FAILED
+        - AGENT_EXECUTION_FAILED
+        - ACP_TIMEOUT
+        - ACP_REQUEST_FAILED
     execution_context: []
     instruction: |
       You are working on a small client-facing static web app
@@ -165,11 +183,7 @@ nodes:
       - make the smallest change that satisfies the delta spec
       - plain HTML/CSS/JS only, no frameworks, no CDN links
       - do not edit anything under specs/ or tests/
-      When finished, write a 2-5 line summary of what you changed to change-summary.md.
-    produced_artifacts:
-      - scope: run
-        path: change-summary.md
-        required: true
+    produced_artifacts: []
     expected_mutations: []
     on_success:
       transition: validate
@@ -191,6 +205,14 @@ nodes:
     title: Merge the delta into the master spec
     type: ai
     routing_type: static
+    retry_policy:
+      attempts: 1
+      on_errors:
+        - NODE_VALIDATION_FAILED
+        - NODE_SUMMARY_VALIDATION_FAILED
+        - AGENT_EXECUTION_FAILED
+        - ACP_TIMEOUT
+        - ACP_REQUEST_FAILED
     execution_context: []
     instruction: |
       Task ${env.TASK_ID} has been implemented and validated.

@@ -25,7 +25,7 @@ DATA = Path(os.environ.get("BOARD_DATA", "/shared/board/tasks.json"))
 API = os.environ.get("FRAMEWORK_API", "http://framework:8080/api")
 PUBLIC_URL = os.environ.get("FRAMEWORK_PUBLIC_URL", "http://localhost:8080")
 PROJECT_NAME = os.environ.get("PROJECT_NAME", "demo-webapp")
-FLOW = os.environ.get("FLOW", "webapp-sdd@3.0")
+FLOW = os.environ.get("FLOW", "webapp-sdd@5.0")
 POLL = float(os.environ.get("POLL_SECONDS", "3"))
 GATE_MODE = os.environ.get("GATE_MODE", "require_all_gates")
 

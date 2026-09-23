@@ -46,7 +46,7 @@ task lifecycle
 	bridge picks the oldest to do card, one run at a time
 		all runs edit the same repo
 	bridge launches a framework run
-		flow `webapp-sdd@3.0`, feature request = task text + id + reporter + time
+		flow `webapp-sdd@5.0`, feature request = task text + id + reporter + time
 		publish mode direct push to main
 	card moves to in progress, links to the run in the framework ui
 	run completed and published -> done
@@ -64,12 +64,22 @@ task lifecycle
 		button has explicit tabindex, safari skips buttons otherwise
 
 framework flow
-	flow `webapp-sdd@3.0`, spec-driven with tests and governance
+	flow `webapp-sdd@5.0`, spec-driven with tests and governance
 	run env set by the board
 		TASK_ID - unique sequential id, T-0001
 		TASK_DIR - spec folder name = task id only, T-0001
 	prepare - command node
 		create specs/ and tests/, seed specs/governance.md if missing
+		gitignore .hgsdlc/ and test-results/: runtime scratch never gets published
+		logic lives in /app/checks/prepare.sh
+			framework runs a command in the run folder, not the repo, if its text mentions `.hgsdlc/`
+	ai nodes retry once on transient failures
+		artifact or step summary missing, agent error, acp timeout
+		```
+		T-0006 failed: Required produced artifact missing: change-summary.md
+		agent wrote it into the repo (main/.hgsdlc/...) instead of the run folder
+		fix: retry policy, drop the redundant change-summary.md artifact
+		```
 	specify - ai node
 		if specs/master.md is missing: write a baseline from the current code
 			recorded as T-0000
@@ -83,7 +93,6 @@ framework flow
 	implement - ai node
 		implement exactly the delta spec, make its tests pass, follow governance
 		must not touch specs/ or tests/
-		write change-summary.md as a run artifact
 	validate - command node, deterministic, code lives in the framework image
 		run all tests: this task's scenarios, every earlier task's (regression), governance tests
 		check every principle of specs/governance.md
