@@ -32,6 +32,15 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && git config --system --add safe.directory '*'
 
+# playwright + headless chromium for the ai-written scenario tests and governance tests
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
+    NODE_PATH=/usr/local/lib/node_modules
+RUN npm install -g @playwright/test \
+    && playwright install --with-deps chromium \
+    && npm cache clean --force \
+    && rm -rf /var/lib/apt/lists/* \
+    && chmod -R a+rX /ms-playwright
+
 RUN useradd --create-home --uid 10001 --shell /bin/bash app \
     && mkdir -p /app /data /tmp/workspace /home/app/.config/opencode \
     && chown -R app:app /app /data /tmp/workspace /home/app
@@ -39,7 +48,8 @@ RUN useradd --create-home --uid 10001 --shell /bin/bash app \
 COPY --from=backend /workspace/build/libs/*.jar /app/app.jar
 COPY framework/entrypoint.sh framework/setup.sh /app/
 COPY framework/flow /app/flow
-RUN chmod +x /app/*.sh
+COPY framework/checks /app/checks
+RUN chmod +x /app/*.sh /app/checks/*.sh
 
 ENV HOME=/home/app
 WORKDIR /app

@@ -9,7 +9,6 @@ MODEL="${AGENT_MODEL:-openrouter/z-ai/glm-5.3}"
 REPO_URL="${WEBAPP_REPO:-git://webapp/webapp.git}"
 REPO_HOST=$(echo "$REPO_URL" | sed -E 's#^[a-z]+://([^/:]+).*#\1#')
 PROJECT_NAME="${PROJECT_NAME:-demo-webapp}"
-FLOW_FILE=/app/flow/webapp-change.yaml
 
 log() { echo "[setup] $*"; }
 
@@ -56,17 +55,20 @@ fi
 log "git identity for published commits"
 call PUT /settings/catalog '{"publish_mode":"local","local_git_username":"hgsdlc-bot","local_git_email":"bot@hgsdlc.local"}' >/dev/null
 
-# team scope: the flow lives in the framework db, no git catalog / PR needed
-# to change an existing flow, bump version and canonical_name in the yaml
-FLOW_VERSION=$(sed -nE 's/^version: *"?([^"]*)"?$/\1/p' "$FLOW_FILE")
-if call GET /flows/webapp-change/versions 2>/dev/null \
-    | jq -e --arg v "$FLOW_VERSION" '.data[] | select(.version == $v and .status == "published")' >/dev/null; then
-  log "flow: webapp-change@${FLOW_VERSION} already published"
-else
-  log "flow: webapp-change@${FLOW_VERSION}"
+# team scope: flows live in the framework db, no git catalog / PR needed
+# every framework/flow/*.yaml is published; to change one, bump version and canonical_name
+for FLOW_FILE in /app/flow/*.yaml; do
+  FLOW_ID=$(sed -nE 's/^id: *"?([^"]*)"?$/\1/p' "$FLOW_FILE")
+  FLOW_VERSION=$(sed -nE 's/^version: *"?([^"]*)"?$/\1/p' "$FLOW_FILE")
+  if call GET "/flows/${FLOW_ID}/versions" 2>/dev/null \
+      | jq -e --arg v "$FLOW_VERSION" '.data[] | select(.version == $v and .status == "published")' >/dev/null; then
+    log "flow: ${FLOW_ID}@${FLOW_VERSION} already published"
+    continue
+  fi
+  log "flow: ${FLOW_ID}@${FLOW_VERSION}"
   FLOW_YAML=$(jq -Rs . < "$FLOW_FILE")
-  call POST /flows/webapp-change/save "{
-    \"flow_id\": \"webapp-change\",
+  call POST "/flows/${FLOW_ID}/save" "{
+    \"flow_id\": \"${FLOW_ID}\",
     \"coding_agent\": \"opencode\",
     \"platform_code\": \"FRONT\",
     \"resource_version\": 0,
@@ -78,7 +80,7 @@ else
     \"publish\": true,
     \"release\": true
   }" >/dev/null
-fi
+done
 
 # every project needs an SCM provider whose host matches the repo url;
 # git:// urls get no credentials, so the token is a placeholder

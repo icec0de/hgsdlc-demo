@@ -2,10 +2,12 @@
 # runs before nginx starts (nginx image entrypoint hook)
 # 1. create the shared git repo from /seed on first start
 # 2. serve it over git:// so the framework can clone and push
-# 3. keep /shared/site checked out at the latest main, in the background
+# 3. keep /shared/site (the page) and /shared/specs (read-only spec mirror)
+#    at the latest main, in the background
 set -e
 REPO=/shared/webapp.git
 SITE=/shared/site
+SPECS=/shared/specs
 
 if [ ! -d "$REPO" ]; then
   echo "[webapp] seeding $REPO"
@@ -30,9 +32,15 @@ git daemon --reuseaddr --export-all --enable=receive-pack --base-path=/shared /s
   while true; do
     rev=$(git --git-dir="$REPO" rev-parse -q --verify main 2>/dev/null || true)
     if [ -n "$rev" ] && [ "$rev" != "$last" ]; then
-      mkdir -p "$SITE"
-      GIT_INDEX_FILE=/tmp/site.index git --git-dir="$REPO" --work-tree="$SITE" checkout -f -q main -- .
-      git --git-dir="$REPO" log -1 --format='%h %s' main > "$SITE/.version"
+      tmp=$(mktemp -d)
+      git --git-dir="$REPO" archive main | tar -x -C "$tmp"
+      # specs go to the host-visible mirror, never to the public site
+      mkdir -p "$tmp/specs" "$SPECS"
+      rsync -a --delete "$tmp/specs/" "$SPECS/"
+      rm -rf "$tmp/specs" "$tmp/tests" "$tmp/test-results"  # not part of the public page
+      git --git-dir="$REPO" log -1 --format='%h %s' main > "$tmp/.version"
+      rsync -a --delete "$tmp/" "$SITE/"
+      rm -rf "$tmp"
       echo "[webapp] now serving $(cat "$SITE/.version")"
       last="$rev"
     fi

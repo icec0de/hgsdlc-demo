@@ -1,0 +1,237 @@
+id: webapp-sdd
+version: "3.0"
+canonical_name: webapp-sdd@3.0
+title: Spec-driven web app change from the task board
+description: |
+  Takes a human intent from the task board, records it as a delta spec,
+  writes tests for its scenarios, implements it in the client-facing static
+  web app, validates it against specs/governance.md, merges the delta into
+  the master spec, records the increment and publishes straight to main.
+  Run env (set by the task board): TASK_ID (T-0001), TASK_DIR (spec folder name = task id).
+start_node_id: prepare
+failure_node_id: finish
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: true
+
+nodes:
+  - id: prepare
+    title: Prepare specs and tests folders
+    type: command
+    instruction: |
+      set -e
+      mkdir -p specs/changes tests
+      if [ ! -f specs/governance.md ]; then
+        cp /app/checks/governance.md specs/governance.md
+        echo "seeded specs/governance.md"
+      fi
+      echo "governance principles:"; grep -E '^\| G-' specs/governance.md | cut -d'|' -f2,3
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: specify
+
+  - id: specify
+    title: Write the delta spec
+    type: ai
+    routing_type: static
+    execution_context: []
+    instruction: |
+      You maintain the specification of a small client-facing static web app
+      (index.html, style.css, app.js in the repository root).
+
+      Task ${env.TASK_ID} from the task board:
+      ${run.feature_request}
+
+      Specs live in specs/:
+      - specs/governance.md lists principles every change must follow (read it first).
+      - specs/master.md is the master spec: the current requirements of the whole app.
+      - specs/changes/<task id>/ holds one folder per task.
+
+      If specs/master.md does not exist yet, first create the baseline:
+      describe the app exactly as it is now (read index.html, style.css, app.js)
+      in the master spec format below, with the increment log entry
+      "T-0000 baseline", and copy it to specs/changes/T-0000/master.md.
+
+      Then write the delta spec for this task to
+      specs/changes/${env.TASK_DIR}/delta.md
+      Describe WHAT changes, not how. Only list requirements this task touches.
+      Requirements must respect specs/governance.md (for example: all page texts in Russian).
+      Every scenario must be observable in a browser, so it can be tested automatically.
+      Do not change the app code and do not edit specs/master.md in this step.
+
+      Delta spec format:
+      ```
+      # ${env.TASK_ID} <short title>
+
+      task: <the task text, verbatim>
+      reporter: <reporter>, requested: <time>
+
+      ## ADDED Requirements
+      ### Requirement: <name>
+      The page SHALL <behaviour>.
+      #### Scenario: <name>
+      - WHEN <action or state>
+      - THEN <observable result>
+
+      ## MODIFIED Requirements
+      ### Requirement: <exact name from master>
+      <full new text of the requirement, with its scenarios>
+
+      ## REMOVED Requirements
+      ### Requirement: <exact name from master>
+      Reason: <why>
+      ```
+      Leave out sections that have no entries.
+
+      Master spec format:
+      ```
+      # Web app - master spec
+
+      last increment: <task id>
+
+      ## Requirements
+      ### Requirement: <name>
+      <text with SHALL>
+      #### Scenario: <name>
+      - WHEN ...
+      - THEN ...
+
+      ## Increments
+      - <task id> <short title>: <added / modified / removed requirement names>
+      ```
+    produced_artifacts: []
+    expected_mutations:
+      - scope: project
+        path: "specs/changes/*/delta.md"
+        required: true
+    on_success:
+      transition: write-tests
+
+  - id: write-tests
+    title: Write tests for the delta scenarios
+    type: ai
+    routing_type: static
+    execution_context: []
+    instruction: |
+      Write automated browser tests for task ${env.TASK_ID} BEFORE it is implemented.
+      Source of truth: specs/changes/${env.TASK_DIR}/delta.md
+      Write exactly one test per "#### Scenario:" of that delta spec to
+      tests/${env.TASK_ID}.spec.js
+      The page is served at "/" by the test runner (Playwright, chromium).
+
+      Use this shape (CommonJS, no other imports):
+      ```
+      const { test, expect } = require('@playwright/test');
+
+      test('${env.TASK_ID}: <scenario name, verbatim from the delta>', async ({ page }) => {
+        await page.goto('/');
+        // WHEN ...
+        // THEN ...
+      });
+      ```
+      Rules:
+      - the test title MUST be "${env.TASK_ID}: " followed by the scenario name exactly as written
+      - locate elements by visible text or role (getByRole, getByText), not by fragile css paths
+      - assert what a visitor observes; the texts the delta spec expects are the source of truth
+      - do not change the app code, the specs, or tests of other tasks
+    produced_artifacts: []
+    expected_mutations:
+      - scope: project
+        path: "tests/*.spec.js"
+        required: true
+    on_success:
+      transition: implement
+
+  - id: implement
+    title: Implement the delta spec
+    type: ai
+    routing_type: static
+    execution_context: []
+    instruction: |
+      You are working on a small client-facing static web app
+      (index.html, style.css, app.js in the repository root; no build step).
+
+      Implement task ${env.TASK_ID} exactly as specified in
+      specs/changes/${env.TASK_DIR}/delta.md
+      Read specs/master.md too: existing requirements must keep working.
+      Follow specs/governance.md (for example: the page is always in Russian, html lang="ru").
+      Tests for this task are in tests/${env.TASK_ID}.spec.js: make them pass.
+
+      Original request, for context:
+      ${run.feature_request}
+
+      Rules:
+      - make the smallest change that satisfies the delta spec
+      - plain HTML/CSS/JS only, no frameworks, no CDN links
+      - do not edit anything under specs/ or tests/
+      When finished, write a 2-5 line summary of what you changed to change-summary.md.
+    produced_artifacts:
+      - scope: run
+        path: change-summary.md
+        required: true
+    expected_mutations: []
+    on_success:
+      transition: validate
+
+  - id: validate
+    title: Validate against governance and run all tests
+    type: command
+    instruction: |
+      set -e
+      test -s index.html
+      /app/checks/validate.sh "${env.TASK_ID}" "${env.TASK_DIR}"
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: merge-spec
+
+  - id: merge-spec
+    title: Merge the delta into the master spec
+    type: ai
+    routing_type: static
+    execution_context: []
+    instruction: |
+      Task ${env.TASK_ID} has been implemented and validated.
+      Merge its delta spec specs/changes/${env.TASK_DIR}/delta.md into specs/master.md:
+      - ADDED requirements: add them to "## Requirements"
+      - MODIFIED requirements: replace the requirement with the same name
+      - REMOVED requirements: delete the requirement with the same name
+      - set "last increment: ${env.TASK_ID}"
+      - append one line to "## Increments":
+        "- ${env.TASK_ID} <short title>: <added / modified / removed requirement names>"
+      Keep every other requirement unchanged. Keep the master spec format.
+      Do not change the app code, the tests, the delta spec or the validation record.
+    produced_artifacts: []
+    expected_mutations:
+      - scope: project
+        path: specs/master.md
+        required: true
+    on_success:
+      transition: record-increment
+
+  - id: record-increment
+    title: Record the increment
+    type: command
+    instruction: |
+      set -e
+      grep -q "last increment: ${env.TASK_ID}" specs/master.md
+      grep -q "^- ${env.TASK_ID} " specs/master.md
+      test -s "specs/changes/${env.TASK_DIR}/validation.md"
+      cp specs/master.md "specs/changes/${env.TASK_DIR}/master.md"
+      echo "recorded increment ${env.TASK_ID}: specs/changes/${env.TASK_DIR}/{delta,validation,master}.md"
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: finish
+
+  # shared by success and failure: an implicit failure transition ends the run
+  # as FAILED and skips publishing (no code, no spec, no tests)
+  - id: finish
+    title: Finish
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []

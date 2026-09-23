@@ -37,8 +37,20 @@
     border-left: 4px solid var(--c); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
   .card[draggable="true"] { cursor: grab; }
   .card.dragging { opacity: .4; }
-  .card .task { white-space: pre-wrap; margin: 0 0 8px; }
-  .meta { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); }
+  .card { cursor: pointer; }
+  .card:hover { background: #f7f8fa; }
+  .card .task { white-space: pre-wrap; margin: 0 0 10px; display: -webkit-box; -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical; overflow: hidden; }
+  /* jira-like card footer: type icon + key on the left, date + reporter avatar on the right */
+  .foot { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #5e6c84; }
+  .foot .key { font-weight: 600; letter-spacing: .01em; }
+  .foot .key.done { text-decoration: line-through; }
+  .foot .grow { flex: 1; }
+  .type { width: 16px; height: 16px; flex: none; }
+  .avatar { width: 24px; height: 24px; border-radius: 50%; display: inline-grid; place-items: center; flex: none;
+    font-size: 10px; font-weight: 700; color: #fff; background: var(--av); }
+  .avatar.lg { width: 32px; height: 32px; font-size: 12px; }
+  .del { margin-left: 2px; }
   .note { margin-top: 8px; font-size: 12px; display: flex; justify-content: space-between; gap: 8px; }
   .note a { color: var(--accent); text-decoration: none; white-space: nowrap; }
   .card.failed .note span { color: var(--review); }
@@ -48,7 +60,46 @@
   .stats { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); font-size: 12px;
     color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
   .stats b { color: var(--ink); font-weight: 600; }
+  .valid { border-top: 0; padding-top: 0; margin-top: 4px; }
+  .valid .pass { color: var(--done); }
+  .valid .fail { color: var(--review); }
   .del { background: none; color: var(--muted); padding: 0; height: auto; font-weight: 400; }
+  /* issue view (jira-like) */
+  .overlay { position: fixed; inset: 0; background: rgba(9, 30, 66, .54); display: none; place-items: start center;
+    padding: 48px 16px; overflow: auto; z-index: 10; }
+  .overlay.open { display: grid; }
+  .issue { background: #fff; border-radius: 8px; width: min(1100px, 100%); box-shadow: 0 8px 32px rgba(9,30,66,.3);
+    display: grid; grid-template-columns: minmax(0, 1fr) 300px; }
+  .issue .main { padding: 24px 28px 32px; min-width: 0; }
+  .issue .side { padding: 24px; border-left: 1px solid var(--line); background: #fafbfc; border-radius: 0 8px 8px 0; }
+  .crumbs { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #5e6c84; margin-bottom: 12px; }
+  .crumbs .x { margin-left: auto; background: none; color: #5e6c84; height: auto; padding: 4px 8px; font-size: 20px; line-height: 1; }
+  .issue h3 { margin: 0 0 20px; font-size: 22px; line-height: 1.3; font-weight: 600; white-space: pre-wrap; }
+  .section { font-size: 13px; font-weight: 600; color: #5e6c84; margin: 22px 0 8px; }
+  .tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--line); margin-top: 22px; }
+  .tabs button { background: none; color: #5e6c84; height: auto; padding: 8px 12px; border-radius: 0; font-size: 13px;
+    border-bottom: 2px solid transparent; margin-bottom: -2px; }
+  .tabs button.on { color: var(--accent); border-bottom-color: var(--accent); }
+  .doc { font-size: 14px; line-height: 1.55; padding-top: 8px; overflow-x: auto; }
+  .doc h1, .doc h2, .doc h3, .doc h4 { margin: 16px 0 6px; line-height: 1.3; }
+  .doc h1 { font-size: 18px; } .doc h2 { font-size: 16px; } .doc h3 { font-size: 15px; } .doc h4 { font-size: 14px; color: #5e6c84; }
+  .doc ul { margin: 4px 0; padding-left: 20px; }
+  .doc code { background: #f4f5f7; padding: 1px 4px; border-radius: 3px; font-size: 12.5px; }
+  .doc pre { background: #f4f5f7; padding: 10px 12px; border-radius: 6px; overflow-x: auto; font-size: 12.5px; }
+  .doc table { border-collapse: collapse; margin: 8px 0; font-size: 13px; }
+  .doc th, .doc td { border: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+  .doc th { background: #f4f5f7; }
+  .doc td:first-child, .doc td:nth-child(3) { white-space: nowrap; }
+  .empty { color: var(--muted); font-size: 14px; padding: 12px 0; }
+  .field { margin-bottom: 16px; }
+  .field .lbl { font-size: 12px; font-weight: 600; color: #5e6c84; margin-bottom: 4px; }
+  .field .val { font-size: 14px; display: flex; align-items: center; gap: 8px; word-break: break-word; }
+  .field .val a { color: var(--accent); text-decoration: none; }
+  .lozenge { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+    padding: 2px 6px; border-radius: 3px; background: var(--lz-bg); color: var(--lz-fg); }
+  .principles { display: grid; gap: 4px; font-size: 13px; }
+  .principles .pass { color: var(--done); } .principles .fail { color: var(--review); }
+  @media (max-width: 800px) { .issue { grid-template-columns: 1fr; } .issue .side { border-left: 0; border-top: 1px solid var(--line); border-radius: 0 0 8px 8px; } }
   @media (max-width: 1100px) { .board { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (max-width: 800px) {
     form { grid-template-columns: 1fr; margin: 16px; }
@@ -60,7 +111,7 @@
 <body>
 <header>
   <h1>Task Board</h1>
-  <p>New tasks land in <b>New</b>. Drag a card to <b>To do</b> when it should be built: the HG SDLC framework picks it up automatically. Runs that fail go to <b>Need review</b>.</p>
+  <p>New tasks land in <b>New</b>. Click a card to open the issue. Drag a card to <b>To do</b> when it should be built: the HG SDLC framework picks it up automatically. Runs that fail go to <b>Need review</b>.</p>
 </header>
 
 <form id="f">
@@ -77,6 +128,8 @@
   <div class="col" data-status="review" style="--c: var(--review)"><h2>Need review <span></span></h2><p class="hint">run failed · nothing published</p><div class="list"></div></div>
   <div class="col" data-status="done" style="--c: var(--done)"><h2>Done <span></span></h2><p class="hint">live on the web app</p><div class="list"></div></div>
 </section>
+
+<div class="overlay" id="overlay"><div class="issue" id="issue" role="dialog" aria-modal="true"></div></div>
 
 <script>
 const f = document.getElementById('f');
@@ -108,24 +161,128 @@ const when = s => { const d = new Date(s); return isNaN(d) ? s : d.toLocaleStrin
 const dur = s => s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${pad(s % 60)}s`;
 const num = n => n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'k' : String(n ?? 0);
 
+// jira "task" issue type icon
+const TYPE_ICON = `<svg class="type" viewBox="0 0 16 16" aria-label="Task"><rect width="16" height="16" rx="3" fill="#4bade8"/><path d="M4.5 8.2l2.2 2.2 4.8-4.8" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const AV_COLORS = ['#0052cc', '#00875a', '#6554c0', '#ff5630', '#ff8b00', '#00a3bf', '#36b37e', '#de350b'];
+function avatar(name, lg) {
+  const n = String(name || '?').trim();
+  const initials = n.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+  const color = AV_COLORS[[...n].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % AV_COLORS.length];
+  return `<span class="avatar${lg ? ' lg' : ''}" style="--av:${color}" title="${esc(n)}">${esc(initials)}</span>`;
+}
+const STATUS = {
+  new: ['New', '#dfe1e6', '#42526e'], todo: ['To do', '#dfe1e6', '#42526e'],
+  in_progress: ['In progress', '#deebff', '#0747a6'], review: ['Need review', '#ffebe6', '#bf2600'],
+  done: ['Done', '#e3fcef', '#006644'],
+};
+const lozenge = s => { const [t, bg, fg] = STATUS[s] || [s, '#dfe1e6', '#42526e'];
+  return `<span class="lozenge" style="--lz-bg:${bg};--lz-fg:${fg}">${esc(t)}</span>`; };
+
+function statsHtml(t) {
+  const st = t.stats || {};
+  if (!(['done', 'review'].includes(t.status) && t.run_id)) return '';
+  return `<div class="stats">
+    <span title="run duration">⏱ <b>${st.duration_s != null ? dur(st.duration_s) : '—'}</b></span>
+    <span title="${st.tokens_total != null ? `input ${st.tokens_in} (cached ${st.tokens_cached ?? 0}) · output ${st.tokens_out}` : 'the agent did not report token usage'}">
+      tokens <b>${st.tokens_total != null ? num(st.tokens_total) : 'n/a'}</b>
+      ${st.tokens_total != null ? `(in ${num(st.tokens_in)} / out ${num(st.tokens_out)})` : ''}</span>
+  </div>`;
+}
+
 function card(t) {
   const busy = t.status === 'in_progress' || (t.status === 'todo' && t.note);
   const link = t.run_url ? `<a href="${esc(t.run_url)}" target="_blank">open run ↗</a>` : '';
   const note = (t.note || link) ? `<div class="note"><span>${busy ? '<i class="spin"></i>' : ''}${esc(t.note)}</span>${link}</div>` : '';
   const del = ['new', 'todo'].includes(t.status) ? `<button class="del" title="Delete" onclick="del('${t.id}')">✕</button>` : '';
   const drag = t.status !== 'in_progress';
-  const st = t.stats || {};
-  const stats = ['done', 'review'].includes(t.status) && t.run_id ? `<div class="stats">
-    <span title="run duration">⏱ <b>${st.duration_s != null ? dur(st.duration_s) : '—'}</b></span>
-    <span title="${st.tokens_total != null ? `input ${st.tokens_in} (cached ${st.tokens_cached ?? 0}) · output ${st.tokens_out}` : 'the agent did not report token usage'}">
-      tokens <b>${st.tokens_total != null ? num(st.tokens_total) : 'n/a'}</b>
-      ${st.tokens_total != null ? `(in ${num(st.tokens_in)} / out ${num(st.tokens_out)})` : ''}</span>
+  const v = t.validation;
+  const valid = v ? `<div class="stats valid" title="${esc(v.principles.map(p => `${p.id} ${p.status}: ${p.evidence}`).join('\n'))}">
+    <span>tests <b>${v.tests ? `${v.tests.passed}/${v.tests.total}` : '—'}</b></span>
+    <span>${v.principles.map(p => `<span class="${p.status}">${esc(p.id)} ${p.status === 'pass' ? '✓' : '✗'}</span>`).join(' ')}</span>
   </div>` : '';
   return `<div class="card ${t.failed ? 'failed' : ''}" draggable="${drag}" data-id="${t.id}">
     <p class="task">${esc(t.task)}</p>
-    <div class="meta"><span>${esc(t.reporter)}</span><span>${when(t.created_at)} ${del}</span></div>
-    ${note}${stats}</div>`;
+    <div class="foot">${TYPE_ICON}<span class="key ${t.status === 'done' ? 'done' : ''}">${esc(t.key || '')}</span>
+      <span class="grow"></span><span title="${esc(when(t.created_at))}">${whenShort(t.created_at)}</span>${del}${avatar(t.reporter)}</div>
+    ${note}${statsHtml(t)}${valid}</div>`;
 }
+const whenShort = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString([], { day: 'numeric', month: 'short' }); };
+
+// ---- issue view
+function md(src) {  // tiny markdown renderer for the spec documents
+  const inline = x => esc(x).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/`([^`]+)`/g, '<code>$1</code>');
+  const out = []; const lines = src.split('\n'); let i = 0;
+  while (i < lines.length) {
+    const l = lines[i];
+    if (l.startsWith('```')) { const buf = []; i++; while (i < lines.length && !lines[i].startsWith('```')) buf.push(lines[i++]); i++;
+      out.push(`<pre>${esc(buf.join('\n'))}</pre>`); continue; }
+    const h = l.match(/^(#{1,4}) (.*)/);
+    if (h) { out.push(`<h${h[1].length}>${inline(h[2])}</h${h[1].length}>`); i++; continue; }
+    if (l.startsWith('|')) { const rows = []; while (i < lines.length && lines[i].startsWith('|')) rows.push(lines[i++]);
+      const cells = r => r.replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+      const body = rows.filter((r, k) => k !== 1 || !/^\|[\s:|-]+\|$/.test(r));
+      out.push('<table>' + body.map((r, k) => '<tr>' + cells(r).map(c => k ? `<td>${inline(c)}</td>` : `<th>${inline(c)}</th>`).join('') + '</tr>').join('') + '</table>');
+      continue; }
+    if (/^\s*- /.test(l)) { const items = []; while (i < lines.length && /^\s*- /.test(lines[i])) items.push(lines[i++].replace(/^\s*- /, ''));
+      out.push('<ul>' + items.map(x => `<li>${inline(x)}</li>`).join('') + '</ul>'); continue; }
+    if (l.trim()) out.push(`<p>${inline(l)}</p>`);
+    i++;
+  }
+  return out.join('');
+}
+
+let tasksById = {};
+let openId = null;
+async function openIssue(id) {
+  const t = tasksById[id];
+  if (!t) return;
+  openId = id;
+  history.replaceState(null, '', '#' + t.key);
+  const spec = await (await fetch(`/api/tasks/${id}/spec`)).json();
+  const docs = spec.docs || {};
+  const tabs = [['delta.md', 'Delta spec'], ['validation.md', 'Validation'], ['master.md', 'Master spec after']]
+    .filter(([f]) => docs[f]);
+  const v = t.validation;
+  document.getElementById('issue').innerHTML = `
+    <div class="main">
+      <div class="crumbs">Web app <span>/</span> ${TYPE_ICON} <b>${esc(t.key)}</b>
+        <button class="x" onclick="closeIssue()" aria-label="Close">×</button></div>
+      <h3>${esc(t.task)}</h3>
+      ${tabs.length ? `<div class="tabs">${tabs.map(([f, n], k) => `<button class="${k ? '' : 'on'}" data-doc="${f}">${n}</button>`).join('')}</div>
+        <div class="doc" id="doc">${md(docs[tabs[0][0]])}</div>`
+        : `<div class="section">Specification</div><div class="empty">${t.status === 'done'
+            ? 'No spec recorded: this task was done before the spec-driven flow.'
+            : 'Delta spec, validation and master snapshot appear here once the task is done.'}</div>`}
+    </div>
+    <aside class="side">
+      <div class="field"><div class="lbl">Status</div><div class="val">${lozenge(t.status)}</div></div>
+      <div class="field"><div class="lbl">Reporter</div><div class="val">${avatar(t.reporter, true)} ${esc(t.reporter)}</div></div>
+      <div class="field"><div class="lbl">Created</div><div class="val">${esc(when(t.created_at))}</div></div>
+      ${t.finished_at ? `<div class="field"><div class="lbl">Resolved</div><div class="val">${esc(when(t.finished_at))}</div></div>` : ''}
+      ${t.note ? `<div class="field"><div class="lbl">Framework</div><div class="val">${esc(t.note)}</div></div>` : ''}
+      ${t.run_url ? `<div class="field"><div class="lbl">Run</div><div class="val"><a href="${esc(t.run_url)}" target="_blank">open in HG SDLC ↗</a></div></div>` : ''}
+      ${statsHtml(t) ? `<div class="field"><div class="lbl">Run stats</div>${statsHtml(t)}</div>` : ''}
+      ${v ? `<div class="field"><div class="lbl">Validation · ${esc(v.verdict)} · tests ${v.tests.passed}/${v.tests.total}</div>
+        <div class="principles">${v.principles.map(p => `<div class="${p.status}" title="${esc(p.evidence)}">${p.status === 'pass' ? '✓' : '✗'} ${esc(p.id)}</div>`).join('')}</div></div>` : ''}
+      ${tabs.length ? `<div class="field"><div class="lbl">Spec folder</div><div class="val"><code>${esc(spec.folder)}</code></div></div>` : ''}
+    </aside>`;
+  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+    document.getElementById('doc').innerHTML = md(docs[b.dataset.doc]);
+  });
+  document.getElementById('overlay').classList.add('open');
+}
+function closeIssue() {
+  openId = null;
+  document.getElementById('overlay').classList.remove('open');
+  history.replaceState(null, '', location.pathname);
+}
+document.getElementById('overlay').addEventListener('click', (e) => { if (e.target.id === 'overlay') closeIssue(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && openId) closeIssue(); });
+document.addEventListener('click', (e) => {
+  const c = e.target.closest('.card');
+  if (c && !e.target.closest('a, button')) openIssue(c.dataset.id);
+});
 
 async function del(id) { await fetch('/api/tasks/' + id, { method: 'DELETE' }); refresh(); }
 
@@ -165,6 +322,12 @@ document.querySelectorAll('.col:not(.locked)').forEach(col => {
 async function refresh() {
   if (dragging) return;  // don't re-render under the cursor
   const tasks = await (await fetch('/api/tasks')).json();
+  tasksById = Object.fromEntries(tasks.map(t => [t.id, t]));
+  if (!refresh.linked && location.hash.length > 1) {  // deep link: /#T-0005 opens the issue
+    refresh.linked = true;
+    const t = tasks.find(x => x.key === decodeURIComponent(location.hash.slice(1)));
+    if (t) openIssue(t.id);
+  }
   document.querySelectorAll('.col').forEach(col => {
     const s = col.dataset.status;
     const list = tasks.filter(t => t.status === s);

@@ -1,7 +1,7 @@
 """Primitive kanban board + bridge to the HG SDLC framework.
 
 Board: New / To do / In progress / Need review / Done,
-each task = reporter, task text, timestamp.
+each task = unique id (T-0001), reporter, task text, timestamp.
 Humans drag cards between New, To do, Need review and Done;
 In progress belongs to the framework.
 Bridge: picks the oldest "to do" task, launches a framework run with the task
@@ -25,7 +25,7 @@ DATA = Path(os.environ.get("BOARD_DATA", "/shared/board/tasks.json"))
 API = os.environ.get("FRAMEWORK_API", "http://framework:8080/api")
 PUBLIC_URL = os.environ.get("FRAMEWORK_PUBLIC_URL", "http://localhost:8080")
 PROJECT_NAME = os.environ.get("PROJECT_NAME", "demo-webapp")
-FLOW = os.environ.get("FLOW", "webapp-change@1.0")
+FLOW = os.environ.get("FLOW", "webapp-sdd@3.0")
 POLL = float(os.environ.get("POLL_SECONDS", "3"))
 GATE_MODE = os.environ.get("GATE_MODE", "require_all_gates")
 
@@ -46,6 +46,36 @@ def save(tasks):
     tmp = DATA.with_suffix(".tmp")
     tmp.write_text(json.dumps(tasks, indent=2, ensure_ascii=False))
     tmp.replace(DATA)
+
+
+def task_dir(task):
+    """spec folder of a task: specs/changes/<key>"""
+    return task["key"]
+
+
+SPECS = Path(os.environ.get("SPECS_DIR", "/shared/specs"))
+
+
+def validation(task):
+    """validation record the framework published with the task, if any"""
+    try:
+        v = json.loads((SPECS / "changes" / task_dir(task) / "validation.json").read_text())
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        return None
+    return {"verdict": v.get("verdict"), "tests": v.get("tests"),
+            "principles": [{"id": p["id"], "status": p["status"], "evidence": p["evidence"]}
+                           for p in v.get("principles", [])]}
+
+
+def with_keys(tasks):
+    """every task gets a unique sequential key T-0001, in creation order"""
+    used = [int(t["key"][2:]) for t in tasks if t.get("key")]
+    n = max(used, default=0)
+    for t in sorted(tasks, key=lambda x: x["created_at"]):
+        if not t.get("key"):
+            n += 1
+            t["key"] = f"T-{n:04d}"
+    return tasks
 
 
 def update(task_id, **fields):
@@ -99,7 +129,7 @@ class Framework:
     def launch(self, task):
         self.ready()
         request = (f"{task['task']}\n\n"
-                   f"(reported by {task['reporter']} at {task['created_at']})")
+                   f"(task {task['key']}, reported by {task['reporter']} at {task['created_at']})")
         run = self.request("POST", "/runs", {
             "project_id": self.project_id,
             "flow_canonical_name": FLOW,
@@ -107,6 +137,8 @@ class Framework:
             "publish_mode": "direct_push",            # straight to main -> live site
             "ai_session_mode": "isolated_attempt_sessions",
             "gate_mode": GATE_MODE,
+            # the flow writes specs/changes/<TASK_DIR>/{delta,validation,master}.md
+            "env": {"TASK_ID": task["key"], "TASK_DIR": task_dir(task)},
         })
         return run["run_id"]
 
@@ -215,8 +247,27 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_GET(self):
+        if self.path.startswith("/api/tasks/") and self.path.endswith("/spec"):
+            # issue view: the task's spec documents as published on main
+            task_id = self.path.split("/")[3]
+            task = next((t for t in load() if t["id"] == task_id), None)
+            if not task:
+                return self.send(404, '{"error":"not found"}')
+            folder = SPECS / "changes" / task_dir(task)
+            docs = {}
+            for name in ("delta.md", "validation.md", "master.md"):
+                try:
+                    docs[name] = (folder / name).read_text()
+                except (FileNotFoundError, KeyError):
+                    pass
+            return self.send(200, json.dumps({"folder": f"shared/specs/changes/{task_dir(task)}",
+                                              "docs": docs}, ensure_ascii=False))
         if self.path == "/api/tasks":
-            self.send(200, json.dumps(load(), ensure_ascii=False))
+            tasks = load()
+            for t in tasks:
+                if t["status"] == "done" and t.get("key"):
+                    t["validation"] = validation(t)
+            self.send(200, json.dumps(tasks, ensure_ascii=False))
         elif self.path in ("/", "/index.html"):
             self.send(200, (Path(__file__).parent / "index.html").read_bytes(), "text/html; charset=utf-8")
         else:
@@ -241,8 +292,8 @@ class Handler(BaseHTTPRequestHandler):
         with lock:
             tasks = load()
             tasks.append(task)
-            save(tasks)
-        self.send(201, json.dumps(task, ensure_ascii=False))
+            save(with_keys(tasks))
+        self.send(201, json.dumps(task, ensure_ascii=False))  # key included: with_keys set it in place
 
     def do_PATCH(self):  # manual move: {"status": "todo" | ...}
         task_id = self.path.rsplit("/", 1)[-1]
@@ -277,6 +328,8 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    with lock:  # keys for tasks created before ids existed
+        save(with_keys(load()))
     threading.Thread(target=bridge, daemon=True).start()
     port = int(os.environ.get("PORT", "8081"))
     print(f"task board on :{port}, framework api {API}", flush=True)

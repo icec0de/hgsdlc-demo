@@ -35,11 +35,25 @@ You need Docker; on macOS OrbStack works. `make start` fetches the framework sub
 
 1. **Tab 1:** add a task, for example *"Add a 'Contact us' button next to 'Order now'"* or *"Make the Order button green"*. It lands in **New**.
 2. Drag the card to **To do**. Within about 3 seconds the framework picks it up and the card moves to **In progress**. Its **open run ↗** link opens that run in tab 2.
-3. **Tab 2:** the Run Console shows the flow graph, the live agent log, artifacts (`change-summary.md`), the diff and the audit trail.
+3. **Tab 2:** the Run Console shows the flow graph (prepare → specify → write-tests → implement → validate → merge-spec → record-increment), the live agent log, artifacts, the diff and the audit trail.
 4. When the run finishes, the framework commits and pushes to `main`. **Tab 3** reloads itself with the change, and the card moves to **Done**.
 5. If the run fails, nothing is published and the card goes to **Need review** with the error code. From there, drag it back to **To do** to retry, or to **Done** to accept it.
 
-Done and Need review cards show the run's duration and token usage (total, input including cached, and output), as reported by the framework.
+Every task gets a unique ID (`T-0001`, …), shown Jira-style on its card; clicking a card opens the issue view with its delta spec, validation and master snapshot, and `http://localhost:8081/#T-0005` links straight to it. Spec folders are named by the ID only. The flow is spec-driven: **specify → write tests → implement → validate → merge spec → record increment**. Each successful task leaves an increment, visible in Finder under `shared/specs/`:
+
+```
+shared/specs/governance.md                     principles every task is validated against (G-01: the page is always in Russian, …)
+shared/specs/master.md                         current master spec + increments log
+shared/specs/changes/T-0005/
+  delta.md                                     what this task changes (written before coding)
+  validation.md                                each principle: result + evidence, and every test run
+  validation.json                              the same, machine-readable
+  master.md                                    master spec right after this increment
+```
+
+The AI writes one Playwright test per scenario of the delta spec, in `tests/T-0005.spec.js` in the repo. The validation step runs in the framework image, so the AI can't change it. It runs every task's tests, as a regression suite, plus the governance tests, and it fails the run if any principle fails. Specs and tests are committed together with the code, but they aren't served on the public site.
+
+Done cards show tests passed/total and a ✓/✗ per principle; hover for the evidence. Done and Need review cards show the run's duration and token usage (total, input including cached, and output), as reported by the framework.
 
 Tasks run one at a time in the order they were created.
 
@@ -51,17 +65,19 @@ framework/
   entrypoint.sh           points opencode at OpenRouter, starts the backend, runs setup.sh
   setup.sh                configures the framework through its REST API:
                           runtime agent/model, flow, SCM provider, project
-  flow/webapp-change.yaml the flow: implement (AI) → smoke-check (command) → finish
+  flow/webapp-sdd.yaml    the spec-driven flow (specify → write-tests → implement → validate → merge → record)
+  checks/                 governance.md, validate.sh, playwright config + governance tests (trusted, in the image)
 taskboard/
   app.py                  board + bridge (python stdlib, no deps)
   index.html              board UI
 webapp/
-  site/                   initial web app (seeded into the git repo on first start)
+  site/                   initial web app + baseline spec (seeded into the git repo on first start)
   sync.sh                 creates the repo, runs git daemon, checks out main into shared/site
 hgsdlc/                   framework source: git submodule of gitverse.ru/kakvsbere/hgsdlc (pinned commit)
 shared/                   all state, created at runtime (make reset deletes it)
   webapp.git              the web app's git repo (the framework clones and pushes here)
   site/                   what nginx serves
+  specs/                  read-only mirror of the specs on main
   board/tasks.json        board data
   framework/db            framework database (H2 file)
   framework/workspace     framework run workspaces (logs, artifacts)
@@ -71,9 +87,9 @@ shared/                   all state, created at runtime (make reset deletes it)
 
 - **Model:** set `MODEL` in `.env` to any OpenRouter model ID. The default is `z-ai/glm-5.3`. For faster runs, try `z-ai/glm-5.3-flash`. The framework uses whatever model the agent reports over ACP. If `MODEL` isn't in that list, setup prints a warning and the board shows the launch error.
 - **Coding agent:** OpenCode, not Qwen. The framework's stock Qwen image only offers Qwen's own OAuth model over ACP, so it can't use an OpenRouter key.
-- **Human gate:** to add a human approval step, insert a `human_approval` node between `smoke-check` and `finish` in `framework/flow/webapp-change.yaml`. Approvals then appear in the framework's Gates inbox, and the card shows `waiting_gate` while it waits.
+- **Human gate:** to add a human approval step, insert a `human_approval` node between `validate` and `merge-spec` in `framework/flow/webapp-sdd.yaml`. Approvals then appear in the framework's Gates inbox, and the card shows `waiting_gate` while it waits.
 - **Persistence:** all state lives in `./shared` on your Mac: the web app repo (`webapp.git`) and what nginx serves (`site/`), the board (`board/tasks.json`), and the framework's database and run workspaces (`framework/`). `stop`, `restart` and rebuilding the images keep all of it, including run history and **open run ↗** links. Only `make reset` wipes it.
-- **Changing the flow:** setup only publishes the flow if that version isn't published yet. After editing `framework/flow/webapp-change.yaml`, bump `version` and `canonical_name`, and set `FLOW` for the board in `docker-compose.yml` to the new version.
+- **Changing the flow:** setup only publishes the flow if that version isn't published yet. After editing `framework/flow/webapp-sdd.yaml`, bump `version` and `canonical_name`, and set `FLOW` for the board in `docker-compose.yml` to the new version.
 - **Lost runs:** if a run is ever lost, for example after a reset of the framework data only, its card moves to **Need review** ("run lost: framework restarted").
 - **Deviations from a stock install:** the flow is team-scoped, so it's published straight to the framework DB without a git catalog or PR. The SCM provider is a placeholder whose host (`webapp`) matches the `git://` repo URL. The framework applies credentials only to http(s) remotes.
 
