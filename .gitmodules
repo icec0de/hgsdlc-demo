@@ -1,0 +1,3 @@
+[submodule "hgsdlc"]
+	path = hgsdlc
+	url = https://gitverse.ru/kakvsbere/hgsdlc.git

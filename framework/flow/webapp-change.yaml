@@ -1,0 +1,60 @@
+id: webapp-change
+version: "1.0"
+canonical_name: webapp-change@1.0
+title: Web app change from the task board
+description: |
+  Takes a human intent from the task board, implements it in the client-facing
+  static web app, runs a smoke check and publishes straight to main.
+start_node_id: implement
+failure_node_id: finish
+fail_on_missing_declared_output: true
+fail_on_missing_expected_mutation: false
+
+nodes:
+  - id: implement
+    title: Implement the requested change
+    type: ai
+    routing_type: static
+    execution_context: []
+    instruction: |
+      You are working on a small client-facing static web app
+      (index.html, style.css, app.js in the repository root; no build step).
+
+      Task from the task board:
+      ${run.feature_request}
+
+      Make the smallest change that fulfils the task:
+      - edit the existing files, keep all existing features working
+      - plain HTML/CSS/JS only, no frameworks, no CDN links
+      - do not touch anything outside the repository root
+      When finished, write a 2-5 line summary of what you changed to change-summary.md.
+    produced_artifacts:
+      - scope: run
+        path: change-summary.md
+        required: true
+    expected_mutations: []
+    on_success:
+      transition: smoke-check
+
+  - id: smoke-check
+    title: Smoke check the page
+    type: command
+    instruction: |
+      set -e
+      test -s index.html
+      grep -qi "</html>" index.html
+      echo "index.html is present and well-terminated"
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []
+    on_success:
+      transition: finish
+
+  # shared by success and failure: an implicit failure transition ends the run
+  # as FAILED and skips publishing
+  - id: finish
+    title: Finish
+    type: terminal
+    execution_context: []
+    produced_artifacts: []
+    expected_mutations: []

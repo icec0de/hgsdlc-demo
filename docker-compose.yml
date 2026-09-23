@@ -1,0 +1,33 @@
+# HG SDLC demo: task board -> framework -> client-facing web app
+# all three share ./shared (git repo of the web app, served site, board data)
+
+services:
+  taskboard:
+    build: ./taskboard
+    ports: ["8081:8081"]
+    environment:
+      FRAMEWORK_API: http://framework:8080/api
+      FRAMEWORK_PUBLIC_URL: http://localhost:8080
+      FLOW: webapp-change@1.0   # keep in sync with framework/flow/webapp-change.yaml
+    volumes: ["./shared:/shared"]
+    depends_on: [framework]
+
+  framework:
+    build:
+      context: .
+      dockerfile: framework/Dockerfile
+    ports: ["8080:8080"]
+    env_file: .env
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      WEBAPP_REPO: git://webapp/webapp.git
+      # framework state on disk (./shared/framework): survives stop/start and container rebuilds
+      DB_URL: jdbc:h2:file:/shared/framework/db/hgsdlc;MODE=PostgreSQL
+      WORKSPACE_ROOT: /shared/framework/workspace
+    volumes: ["./shared:/shared"]
+    depends_on: [webapp]
+
+  webapp:
+    build: ./webapp
+    ports: ["8082:80"]
+    volumes: ["./shared:/shared"]

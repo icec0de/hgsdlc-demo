@@ -1,0 +1,7 @@
+# secrets
+.env
+# runtime state: web app repo, board, framework db and workspaces
+shared/
+# raw screen recordings contain private browser tabs; only edited cuts are published
+screencast/*.mov
+.DS_Store
