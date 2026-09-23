@@ -1,0 +1,36 @@
+{
+  "task": "T-0006",
+  "verdict": "passed",
+  "validated_at": "2026-09-23T13:11:10Z",
+  "tests": {
+    "total": 8,
+    "passed": 8
+  },
+  "principles": [
+    {
+      "id": "G-01",
+      "status": "pass",
+      "evidence": "governance test passed: lang=\"ru\", visible text is Russian"
+    },
+    {
+      "id": "G-02",
+      "status": "pass",
+      "evidence": "no <script>/<link> pointing to another host"
+    },
+    {
+      "id": "G-03",
+      "status": "pass",
+      "evidence": "4/4 scenarios have a passing test in tests/T-0006.spec.js"
+    },
+    {
+      "id": "G-04",
+      "status": "pass",
+      "evidence": "3/3 tests of earlier tasks pass"
+    },
+    {
+      "id": "G-05",
+      "status": "pass",
+      "evidence": "delta spec specs/changes/T-0006/delta.md present before merge"
+    }
+  ]
+}

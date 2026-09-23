@@ -2,32 +2,79 @@
 body {
   margin: 0;
   min-height: 100vh;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: #f4efe9;
-  color: #2b2118;
+  background: #f4f7f5;
+  color: #14231c;
 }
-.card {
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 18px 32px;
   background: #fff;
-  padding: 48px 56px;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  text-align: center;
-  max-width: 480px;
+  border-bottom: 1px solid #e2e9e5;
 }
-h1 { margin: 0 0 8px; font-size: 36px; }
-.lead { margin: 0 0 28px; color: #6b5a4b; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.logo { width: 44px; height: 44px; }
+.brand-name { font-size: 20px; letter-spacing: 0.5px; }
+.brand-name strong { color: #0b3d2e; }
+.tagline { color: #5a6e63; font-size: 14px; }
+.cover {
+  flex: 1;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 56px 32px 40px;
+  text-align: center;
+}
+h1 { margin: 0 0 14px; font-size: 40px; line-height: 1.15; color: #0b3d2e; }
+.lead { margin: 0 auto 36px; max-width: 640px; color: #4c5f55; font-size: 18px; }
+.gallery {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 0 0 36px;
+}
+.shot {
+  margin: 0;
+  width: 300px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(11, 61, 46, 0.1);
+  overflow: hidden;
+}
+.shot svg { display: block; width: 100%; height: auto; }
+.shot figcaption {
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #3d4f45;
+}
 .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 .btn {
   font: inherit;
   font-weight: 600;
-  padding: 12px 28px;
+  padding: 14px 40px;
   border: 0;
   border-radius: 999px;
-  background: #6f4e37;
+  background: #0b3d2e;
   color: #fff;
   cursor: pointer;
 }
-.btn:hover { filter: brightness(1.1); }
-.message { min-height: 1.5em; margin: 20px 0 0; color: #6f4e37; }
+.btn:hover { filter: brightness(1.2); }
+.btn-secondary { background: #e8b23c; color: #14231c; }
+.phone { margin: 20px 0 0; font-size: 20px; font-weight: 600; color: #0b3d2e; }
+.phone:empty { margin: 0; }
+.message { min-height: 1.5em; margin: 20px 0 0; color: #0b3d2e; }
+.foot {
+  padding: 10px 32px;
+  background: #fff;
+  border-top: 1px solid #e2e9e5;
+  color: #5a6e63;
+  font-size: 12px;
+  text-align: center;
+}

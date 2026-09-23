@@ -22,6 +22,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 DATA = Path(os.environ.get("BOARD_DATA", "/shared/board/tasks.json"))
+SEED = Path(os.environ.get("SEED_TASKS", Path(__file__).parent / "seed-tasks.json"))
 API = os.environ.get("FRAMEWORK_API", "http://framework:8080/api")
 PUBLIC_URL = os.environ.get("FRAMEWORK_PUBLIC_URL", "http://localhost:8080")
 PROJECT_NAME = os.environ.get("PROJECT_NAME", "demo-webapp")
@@ -327,7 +328,22 @@ class Handler(BaseHTTPRequestHandler):
         self.send(204, b"")
 
 
+def seed_if_fresh():
+    """first start only: pre-populate the board with the recorded demo run,
+    so a fresh clone shows the same board as the one in the screencast.
+    Never overwrites an existing board, even one a human intentionally emptied."""
+    if DATA.exists():
+        return
+    try:
+        tasks = json.loads(SEED.read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        return
+    save(tasks)
+    print(f"seeded board with {len(tasks)} demo tasks from {SEED}", flush=True)
+
+
 if __name__ == "__main__":
+    seed_if_fresh()
     with lock:  # keys for tasks created before ids existed
         save(with_keys(load()))
     threading.Thread(target=bridge, daemon=True).start()

@@ -1,0 +1,134 @@
+[
+  {
+    "id": "5b00e8ff",
+    "reporter": "AA",
+    "task": "Make the webpage look like a cover-page of a financial company, in particular - leasing. The company works as a solution to the automotive industry or agriculture.\n\nPut there a few images, a few pictures.\n\nMake sure that the website, webpage, is simple, a simple static. With a logo, a few fancy images that remind the industry-specific, and a single button that now has a label as \"order now\".",
+    "created_at": "2026-09-23T11:05:00.000Z",
+    "status": "done",
+    "note": "published",
+    "run_id": "1757d135-d0b8-4b80-8d91-1a4c34a0e583",
+    "run_url": "http://localhost:8080/run-console?runId=1757d135-d0b8-4b80-8d91-1a4c34a0e583",
+    "finished_at": "2026-09-23T11:07:47+00:00",
+    "stats": {
+      "duration_s": 32,
+      "tokens_in": 15593,
+      "tokens_cached": 15552,
+      "tokens_out": 149,
+      "tokens_total": 15742
+    },
+    "key": "T-0001"
+  },
+  {
+    "id": "fa1e1ed2",
+    "reporter": "AA",
+    "task": "Set the company label as \"Supercompany\"",
+    "created_at": "2026-09-23T11:06:00.000Z",
+    "status": "done",
+    "note": "published",
+    "run_id": "d4386ca8-568e-4d9a-a07f-0044c14b8eb9",
+    "run_url": "http://localhost:8080/run-console?runId=d4386ca8-568e-4d9a-a07f-0044c14b8eb9",
+    "finished_at": "2026-09-23T11:09:32+00:00",
+    "stats": {
+      "duration_s": 60,
+      "tokens_in": 11129,
+      "tokens_cached": 11072,
+      "tokens_out": 41,
+      "tokens_total": 11170
+    },
+    "key": "T-0002"
+  },
+  {
+    "id": "f4d80569",
+    "reporter": "AA",
+    "task": "Change default language and text to Russian",
+    "created_at": "2026-09-23T11:06:00.000Z",
+    "status": "done",
+    "note": "published",
+    "run_id": "6b749774-598c-4dd0-95b7-8d8cc9087d3d",
+    "run_url": "http://localhost:8080/run-console?runId=6b749774-598c-4dd0-95b7-8d8cc9087d3d",
+    "finished_at": "2026-09-23T11:09:59+00:00",
+    "stats": {
+      "duration_s": 22,
+      "tokens_in": 12259,
+      "tokens_cached": 11968,
+      "tokens_out": 60,
+      "tokens_total": 12319
+    },
+    "key": "T-0003"
+  },
+  {
+    "id": "7c13db53",
+    "reporter": "Claude",
+    "task": "Add a small footer at the bottom of the page with the text: © 2026 Supercompany",
+    "created_at": "2026-09-23T12:12:39+00:00",
+    "status": "done",
+    "note": "published",
+    "key": "T-0004",
+    "run_id": "0b57b698-3995-43ff-86e3-bcc8bdaa9e2f",
+    "run_url": "http://localhost:8080/run-console?runId=0b57b698-3995-43ff-86e3-bcc8bdaa9e2f",
+    "finished_at": "2026-09-23T12:16:26+00:00",
+    "stats": {
+      "duration_s": 222,
+      "tokens_in": 60101,
+      "tokens_cached": 59520,
+      "tokens_out": 363,
+      "tokens_total": 60557
+    }
+  },
+  {
+    "id": "ff58d67c",
+    "reporter": "Claude",
+    "task": "Добавь кнопку «Позвонить нам» рядом с основной кнопкой. По клику под кнопками показывается телефон +7 800 555-35-35",
+    "created_at": "2026-09-23T12:27:50+00:00",
+    "status": "done",
+    "note": "published",
+    "key": "T-0005",
+    "run_id": "c77d0a33-d8f1-433b-99cf-1dc3371d7ac8",
+    "run_url": "http://localhost:8080/run-console?runId=c77d0a33-d8f1-433b-99cf-1dc3371d7ac8",
+    "finished_at": "2026-09-23T12:31:26+00:00",
+    "stats": {
+      "duration_s": 212,
+      "tokens_in": 54454,
+      "tokens_cached": 54272,
+      "tokens_out": 363,
+      "tokens_total": 54818
+    }
+  },
+  {
+    "id": "518bd534",
+    "reporter": "AA",
+    "task": "Я бы хотел, чтобы на экране сайта визитки были картинки для автопарка и коммерческого транспорта, а также для сельхозтехники. Я не хочу ничего про предсказуемые платежи",
+    "created_at": "2026-09-23T12:59:00.000Z",
+    "status": "done",
+    "note": "published",
+    "key": "T-0006",
+    "run_id": "397f90bb-2434-4c40-aa55-7b41d5e85a57",
+    "run_url": "http://localhost:8080/run-console?runId=397f90bb-2434-4c40-aa55-7b41d5e85a57",
+    "finished_at": "2026-09-23T13:11:23+00:00",
+    "stats": {
+      "duration_s": 105,
+      "tokens_in": 67418,
+      "tokens_cached": 67200,
+      "tokens_out": 441,
+      "tokens_total": 67868
+    }
+  },
+  {
+    "id": "ed82437d",
+    "reporter": "AA",
+    "task": "Изображение сегмента техники должно быть не индикативным или мультяшным, а реальными фотографиями или хотя бы фотореалистичными изображениями",
+    "created_at": "2026-09-23T13:24:00.000Z",
+    "status": "new",
+    "note": "",
+    "key": "T-0007"
+  },
+  {
+    "id": "797bcbe1",
+    "reporter": "AA",
+    "task": "Форма «Заказать сейчас» должна приводить к диалогу с именем и номером телефона \nНажатие формы должно приводить к созданию или обновлению данных в JSON-файле как общем файле следов, которые были собраны через форму на сайте. Файл должен быть append-only. В собираемых данных также должны быть datetime",
+    "created_at": "2026-09-23T14:09:00.000Z",
+    "status": "new",
+    "note": "",
+    "key": "T-0008"
+  }
+]

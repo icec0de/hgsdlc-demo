@@ -27,7 +27,7 @@ components
 		coding agent cli installed in the same image
 		configured on start through its own rest api by `setup.sh`
 	webapp - http://localhost:8082
-		static page "acme coffee": index.html, style.css, app.js, no build step
+		static page (starts as "acme coffee", a fictional coffee shop), index.html/style.css/app.js, no build step
 		owns the git repo `shared/webapp.git`, serves it over `git://webapp/webapp.git`
 		nginx serves `shared/site`, a checkout of main refreshed every 2 s
 		injects a live-reload script so open tabs refresh after each publish
@@ -154,7 +154,8 @@ specs
 		```
 	tests and specs are not served by the public site
 	every successful task = one increment = one folder, sorted by id
-	fresh install seeds a baseline for the acme coffee page
+	fresh install seeds the app as it stood after the recorded demo (post t-0006), not the original acme coffee baseline
+		the original baseline is kept as history only, in specs/changes/T-0000/master.md
 
 technical design choices
 	orbstack as the docker runtime instead of docker desktop
@@ -245,6 +246,20 @@ persistence
 		changing the flow requires a new version
 	survives stop, restart and image rebuilds, including run history and run links
 	wipe only on purpose
+
+demo seed data
+	goal: a fresh git clone runs exactly like the recorded demo, no setup steps to see the point
+	seeded once, only when ./shared does not exist yet (first start, or after make reset)
+		never overwrites a board or web app a human has since changed
+	taskboard/seed-tasks.json - the 6 completed tasks (t-0001..t-0006) plus 2 pending ones, verbatim
+		copied from the live board's tasks.json at the end of the recorded session
+		stats and validation are read from specs at request time, not duplicated in the seed
+	webapp/site/ - the web app's git seed brought up to the state after t-0006
+		index.html / style.css / app.js / readme.md as published
+		specs/ - governance.md, master.md, every specs/changes/<id>/ folder produced so far
+		tests/ - the ai-written playwright tests for t-0005 and t-0006
+	seeded run links (open run ↗) point at the original run ids from the recording
+		they 404 against a fresh framework - same as any run lost to a framework reset, not a bug
 
 operations
 	make start - build if needed, start, wait for framework setup, open the three tabs

@@ -1,6 +1,6 @@
 # Web app - master spec
 
-last increment: T-0000
+last increment: T-0004
 
 ## Requirements
 ### Requirement: Brand header
@@ -31,10 +31,11 @@ The page SHALL display an order button labelled "Заказать сейчас";
 - THEN the message "Спасибо! Ваш заказ уже в пути." appears on the page
 
 ### Requirement: Footer
-The page SHALL display a footer at the bottom of the page containing the copyright text "© 2026 Supercompany" and the industries line "Автомобили · Агропром".
-#### Scenario: Footer displayed
+The page SHALL display a small footer at the bottom of the page containing the text "© 2026 Supercompany".
+#### Scenario: Small footer displayed at page bottom
 - WHEN the page is loaded
-- THEN a footer is displayed at the bottom of the page containing "© 2026 Supercompany" and "Автомобили · Агропром"
+- THEN a small footer is shown at the bottom of the page with the text "© 2026 Supercompany"
 
 ## Increments
 - T-0000 baseline: added Brand header, Hero section, Illustration gallery, Order action, Footer
+- T-0004 Add a small footer: modified Footer

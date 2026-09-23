@@ -8,7 +8,7 @@ Three containers share one folder (`./shared`):
 |---|---|---|---|
 | 1 | http://localhost:8081 | `taskboard` | Simple kanban board (New / To do / In progress / Need review / Done). Each task has a reporter, the task text and a date/time. |
 | 2 | http://localhost:8080 | `framework` | [Human Guided SDLC](https://gitverse.ru/kakvsbere/hgsdlc) (backend and UI) with the OpenCode CLI connected to OpenRouter. Log in as `admin` / `admin`. |
-| 3 | http://localhost:8082 | `webapp` | The client-facing web app ("Acme Coffee") that the framework changes. |
+| 3 | http://localhost:8082 | `webapp` | The client-facing web app ("Supercompany") that the framework changes. |
 
 ```
 task board ──(REST: launch run)──▶ HG SDLC ──(git push main)──▶ git://webapp/webapp.git ──▶ nginx serves it
@@ -16,12 +16,14 @@ task board ──(REST: launch run)──▶ HG SDLC ──(git push main)──
      └──────(polls run status)──────────┘
 ```
 
+The repo comes pre-seeded with a finished demo run (see [screencast](screencast/hgsdlc_screencast.mp4)): 6 completed tasks on the board with their specs, tests and validation, and the web app already showing everything they built. A fresh clone looks exactly like the recording — no need to build anything first to see the point.
+
 ## Run
 
 ```bash
 git clone --recurse-submodules https://github.com/icec0de/hgsdlc-demo.git && cd hgsdlc-demo
 cp .env.example .env        # put your OpenRouter key in it
-make start                  # build if needed, start, wait until ready, open the 3 tabs in Safari
+make start                  # build if needed, start, wait until ready, open the 3 tabs
 make stop                   # stop the containers; containers and all data are kept
 make restart                # stop + start; nothing is lost
 make reset                  # asks for confirmation, then removes containers AND wipes all data
@@ -29,7 +31,7 @@ make reset                  # asks for confirmation, then removes containers AND
 
 Other targets: `make open` (reopen the tabs), `make status`, `make logs`.
 
-You need Docker; on macOS OrbStack works. `make start` fetches the framework submodule if it's missing. The first build takes about 5 minutes, because it compiles the framework from `./hgsdlc`.
+You need Docker running (OrbStack, Docker Desktop, Colima, …) and an [OpenRouter](https://openrouter.ai/) API key. `make start` fetches the framework submodule if it's missing, and tries to start OrbStack/Docker Desktop for you on macOS if neither is running. The first build takes about 5 minutes, because it compiles the framework from `./hgsdlc`.
 
 ## Demo script
 
@@ -70,8 +72,9 @@ framework/
 taskboard/
   app.py                  board + bridge (python stdlib, no deps)
   index.html              board UI
+  seed-tasks.json         demo board history (loaded once, only if the board has never run)
 webapp/
-  site/                   initial web app + baseline spec (seeded into the git repo on first start)
+  site/                   web app + specs + tests, as of the recorded demo run (seeded into the git repo on first start)
   sync.sh                 creates the repo, runs git daemon, checks out main into shared/site
 hgsdlc/                   framework source: git submodule of gitverse.ru/kakvsbere/hgsdlc (pinned commit)
 shared/                   all state, created at runtime (make reset deletes it)
@@ -92,6 +95,7 @@ shared/                   all state, created at runtime (make reset deletes it)
 - **Changing the flow:** setup only publishes the flow if that version isn't published yet. After editing `framework/flow/webapp-sdd.yaml`, bump `version` and `canonical_name`, and set `FLOW` for the board in `docker-compose.yml` to the new version.
 - **Lost runs:** if a run is ever lost, for example after a reset of the framework data only, its card moves to **Need review** ("run lost: framework restarted").
 - **Deviations from a stock install:** the flow is team-scoped, so it's published straight to the framework DB without a git catalog or PR. The SCM provider is a placeholder whose host (`webapp`) matches the `git://` repo URL. The framework applies credentials only to http(s) remotes.
+- **Seeded demo data:** `taskboard/seed-tasks.json` and `webapp/site/` capture the exact board and web app state from the recorded run. They're loaded once, only when `shared/` doesn't exist yet (a first `make start`, or after `make reset`); they never overwrite a board or web app you've since changed. The seeded cards' **open run ↗** links point at the original run IDs from that recording and won't resolve against your fresh framework — that's expected, not a bug (see "Lost runs" above).
 
 The design, decisions and scope are in [spec.md](spec.md).
 

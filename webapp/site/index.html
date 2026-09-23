@@ -1,20 +1,73 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Acme Coffee</title>
+  <title>Supercompany</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="card">
-    <h1>Acme Coffee</h1>
-    <p class="lead">Freshly roasted beans, delivered every Monday.</p>
-    <div class="actions">
-      <button id="order" class="btn">Order now</button>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 48 48" role="img" aria-label="Логотип Supercompany">
+        <circle cx="24" cy="24" r="22" fill="#0b3d2e"/>
+        <path d="M14 30 L22 14 L26 22 L34 14" fill="none" stroke="#7fd1ae" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="12" y="30" width="24" height="4" rx="2" fill="#e8b23c"/>
+      </svg>
+      <span class="brand-name">Supercompany</span>
     </div>
+    <span class="tagline">Финансы для колёс и полей</span>
+  </header>
+
+  <main class="cover">
+    <h1>Лизинговые решения для автомобильной и агропромышленной отраслей</h1>
+    <p class="lead">Гибкий лизинг техники и транспорта — от грузовых фургонов до уборочных комбайнов. Один партнёр, один план для вашего бизнеса.</p>
+
+    <div class="gallery">
+      <figure class="shot">
+        <svg viewBox="0 0 320 180" role="img" aria-label="Иллюстрация: грузовой фургон">
+          <rect width="320" height="180" rx="12" fill="#e7f2ec"/>
+          <rect x="24" y="70" width="150" height="60" rx="8" fill="#0b3d2e"/>
+          <rect x="174" y="88" width="70" height="42" rx="6" fill="#e8b23c"/>
+          <rect x="34" y="78" width="40" height="26" rx="4" fill="#bfe3d2"/>
+          <circle cx="60" cy="134" r="16" fill="#26332e"/>
+          <circle cx="60" cy="134" r="7" fill="#dfe6e3"/>
+          <circle cx="216" cy="134" r="16" fill="#26332e"/>
+          <circle cx="216" cy="134" r="7" fill="#dfe6e3"/>
+          <rect x="246" y="104" width="14" height="30" rx="4" fill="#26332e"/>
+        </svg>
+        <figcaption>Автопарк и коммерческий транспорт</figcaption>
+      </figure>
+
+      <figure class="shot">
+        <svg viewBox="0 0 320 180" role="img" aria-label="Иллюстрация: трактор в поле">
+          <rect width="320" height="180" rx="12" fill="#f3ead2"/>
+          <rect x="0" y="130" width="320" height="50" rx="12" fill="#c9a94e"/>
+          <rect x="70" y="86" width="90" height="40" rx="8" fill="#0b3d2e"/>
+          <rect x="160" y="96" width="34" height="30" rx="4" fill="#e8b23c"/>
+          <rect x="78" y="66" width="10" height="22" fill="#0b3d2e"/>
+          <circle cx="92" cy="126" r="22" fill="#26332e"/>
+          <circle cx="92" cy="126" r="9" fill="#dfe6e3"/>
+          <circle cx="186" cy="132" r="13" fill="#26332e"/>
+          <circle cx="186" cy="132" r="6" fill="#dfe6e3"/>
+        </svg>
+        <figcaption>Сельхозтехника</figcaption>
+      </figure>
+
+    </div>
+
+    <div class="actions">
+      <button id="order" class="btn">Заказать сейчас</button>
+      <button id="call" class="btn btn-secondary">Позвонить нам</button>
+    </div>
+    <p id="phone" class="phone"></p>
     <p id="message" class="message"></p>
   </main>
+
+  <footer class="foot">
+    <span>© 2026 Supercompany</span>
+  </footer>
+
   <script src="app.js"></script>
 </body>
 </html>
