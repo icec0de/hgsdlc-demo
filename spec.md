@@ -1,3 +1,4 @@
+````
 task
 	demonstrate human guided sdlc end to end: human intent in a task tracker becomes a live change in a client-facing web app
 	framework: human guided sdlc (hg sdlc), open source, gitverse.ru/kakvsbere/hgsdlc
@@ -277,3 +278,4 @@ operations
 	make restart - stop + start, nothing lost
 	make reset - asks for confirmation, removes containers and wipes all data
 	make open, make status, make logs - helpers
+````
