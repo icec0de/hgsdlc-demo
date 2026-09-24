@@ -59,15 +59,21 @@ call PUT /settings/catalog '{"publish_mode":"local","local_git_username":"hgsdlc
 # every framework/flow/*.yaml is published; to change one, bump version and canonical_name
 for FLOW_FILE in /app/flow/*.yaml; do
   FLOW_ID=$(sed -nE 's/^id: *"?([^"]*)"?$/\1/p' "$FLOW_FILE")
-  FLOW_VERSION=$(sed -nE 's/^version: *"?([^"]*)"?$/\1/p' "$FLOW_FILE")
-  if call GET "/flows/${FLOW_ID}/versions" 2>/dev/null \
-      | jq -e --arg v "$FLOW_VERSION" '.data[] | select(.version == $v and .status == "published")' >/dev/null; then
-    log "flow: ${FLOW_ID}@${FLOW_VERSION} already published"
+  # the framework assigns its own version number on publish (1.0, 1.1, ...),
+  # independent of whatever "version:" this yaml declares - so idempotency here
+  # is "does this flow_id have a published version at all", not a string match.
+  # The board looks up the actual canonical_name at run time (see taskboard/app.py).
+  # A flow_id that was never saved 404s here (not an empty list) - plain curl
+  # (no --fail-with-body) so we get the body either way and let jq's `?` treat
+  # a missing/error .data the same as an empty one.
+  VERSIONS_JSON=$(curl -sS -X GET "$API/flows/${FLOW_ID}/versions" -H "Authorization: Bearer $TOKEN")
+  PUBLISHED=$(jq -r '.data[]? | select(.status == "published") | .canonical_name' <<<"$VERSIONS_JSON" 2>/dev/null | head -1)
+  if [ -n "$PUBLISHED" ]; then
+    log "flow: ${PUBLISHED} already published"
     continue
   fi
-  log "flow: ${FLOW_ID}@${FLOW_VERSION}"
   FLOW_YAML=$(jq -Rs . < "$FLOW_FILE")
-  call POST "/flows/${FLOW_ID}/save" "{
+  RESULT=$(call POST "/flows/${FLOW_ID}/save" "{
     \"flow_id\": \"${FLOW_ID}\",
     \"coding_agent\": \"opencode\",
     \"platform_code\": \"FRONT\",
@@ -79,7 +85,8 @@ for FLOW_FILE in /app/flow/*.yaml; do
     \"flow_yaml\": ${FLOW_YAML},
     \"publish\": true,
     \"release\": true
-  }" >/dev/null
+  }")
+  log "flow: $(jq -r '.data.canonical_name' <<<"$RESULT") published"
 done
 
 # every project needs an SCM provider whose host matches the repo url;

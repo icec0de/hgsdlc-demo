@@ -46,7 +46,7 @@ task lifecycle
 	bridge picks the oldest to do card, one run at a time
 		all runs edit the same repo
 	bridge launches a framework run
-		flow `webapp-sdd@5.0`, feature request = task text + id + reporter + time
+		flow `webapp-sdd`, whichever version the framework has published, feature request = task text + id + reporter + time
 		publish mode direct push to main
 	card moves to in progress, links to the run in the framework ui
 	run completed and published -> done
@@ -64,7 +64,7 @@ task lifecycle
 		button has explicit tabindex, safari skips buttons otherwise
 
 framework flow
-	flow `webapp-sdd@5.0`, spec-driven with tests and governance
+	flow `webapp-sdd`, spec-driven with tests and governance
 	run env set by the board
 		TASK_ID - unique sequential id, T-0001
 		TASK_DIR - spec folder name = task id only, T-0001
@@ -109,6 +109,16 @@ framework flow
 		failure reaches it as implicit failure: run ends failed, publish skipped
 		no code, spec or tests from a failed run
 	publish: one commit by hgsdlc-bot with code, tests and specs, pushed to main
+	the framework assigns its own version on publish (1.0, 1.1, ...)
+		independent of whatever "version:" the yaml itself declares
+		```
+		bug: board hardcoded flow_canonical_name "webapp-sdd@5.0" (the yaml's own version)
+		every fresh install actually published as "webapp-sdd@1.0" - the framework's number, not ours
+		every task failed: POST /runs -> 404 Flow not found: webapp-sdd@5.0
+		found while taking screenshots for the readme on a freshly reset install
+		fix: board looks up the published canonical_name by flow_id at run time,
+		same pattern already used to resolve project_id by name
+		```
 
 governance and validation
 	principles: specs/governance.md in the web app repo, human-owned

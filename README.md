@@ -16,6 +16,20 @@ task board ──(REST: launch run)──▶ HG SDLC ──(git push main)──
      └──────(polls run status)──────────┘
 ```
 
+## Screenshots
+
+**1. Task board** — intent goes in here. Each card is a task, tracked through New → To do → In progress → Need review → Done, with the run's duration, token usage and governance/test results once it's done.
+
+![Task board](screenshots/task_tracker.png)
+
+**2. HG SDLC (the engine)** — picks up a task and runs it through the spec-driven flow.
+
+![HG SDLC](screenshots/engine.png)
+
+**3. The web app** — the client-facing result. Every published task shows up here, live.
+
+![Web app](screenshots/mock_website.png)
+
 The repo comes pre-seeded with a finished demo run (see [screencast](screencast/hgsdlc_screencast.mp4)): 6 completed tasks on the board with their specs, tests and validation, and the web app already showing everything they built. A fresh clone looks exactly like the recording — no need to build anything first to see the point.
 
 ## Run
@@ -92,7 +106,7 @@ shared/                   all state, created at runtime (make reset deletes it)
 - **Coding agent:** OpenCode, not Qwen. The framework's stock Qwen image only offers Qwen's own OAuth model over ACP, so it can't use an OpenRouter key.
 - **Human gate:** to add a human approval step, insert a `human_approval` node between `validate` and `merge-spec` in `framework/flow/webapp-sdd.yaml`. Approvals then appear in the framework's Gates inbox, and the card shows `waiting_gate` while it waits.
 - **Persistence:** all state lives in `./shared` on your Mac: the web app repo (`webapp.git`) and what nginx serves (`site/`), the board (`board/tasks.json`), and the framework's database and run workspaces (`framework/`). `stop`, `restart` and rebuilding the images keep all of it, including run history and **open run ↗** links. Only `make reset` wipes it.
-- **Changing the flow:** setup only publishes the flow if that version isn't published yet. After editing `framework/flow/webapp-sdd.yaml`, bump `version` and `canonical_name`, and set `FLOW` for the board in `docker-compose.yml` to the new version.
+- **Changing the flow:** the framework assigns its own version number on publish (1.0, 1.1, …), independent of whatever `version:` the yaml declares; the board looks up whichever version is actually published, so nothing needs to be kept in sync manually. Setup only publishes a flow_id that has no published version yet, so editing `framework/flow/webapp-sdd.yaml` on a long-running install needs a manual publish (or `make reset && make start` to publish it fresh) to take effect.
 - **Lost runs:** if a run is ever lost, for example after a reset of the framework data only, its card moves to **Need review** ("run lost: framework restarted").
 - **Deviations from a stock install:** the flow is team-scoped, so it's published straight to the framework DB without a git catalog or PR. The SCM provider is a placeholder whose host (`webapp`) matches the `git://` repo URL. The framework applies credentials only to http(s) remotes.
 - **Seeded demo data:** `taskboard/seed-tasks.json` and `webapp/site/` capture the exact board and web app state from the recorded run. They're loaded once, only when `shared/` doesn't exist yet (a first `make start`, or after `make reset`); they never overwrite a board or web app you've since changed. The seeded cards' **open run ↗** links point at the original run IDs from that recording and won't resolve against your fresh framework — that's expected, not a bug (see "Lost runs" above).

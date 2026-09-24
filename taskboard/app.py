@@ -26,7 +26,10 @@ SEED = Path(os.environ.get("SEED_TASKS", Path(__file__).parent / "seed-tasks.jso
 API = os.environ.get("FRAMEWORK_API", "http://framework:8080/api")
 PUBLIC_URL = os.environ.get("FRAMEWORK_PUBLIC_URL", "http://localhost:8080")
 PROJECT_NAME = os.environ.get("PROJECT_NAME", "demo-webapp")
-FLOW = os.environ.get("FLOW", "webapp-sdd@5.0")
+# the flow_id is stable; the framework assigns its own version number on publish
+# (independent of whatever "version:" the yaml declares), so the board looks up
+# the actual published canonical_name instead of hardcoding one
+FLOW_ID = os.environ.get("FLOW_ID", "webapp-sdd")
 POLL = float(os.environ.get("POLL_SECONDS", "3"))
 GATE_MODE = os.environ.get("GATE_MODE", "require_all_gates")
 
@@ -94,6 +97,7 @@ class Framework:
     def __init__(self):
         self.token = None
         self.project_id = None
+        self.flow_canonical_name = None
 
     def request(self, method, path, body=None, auth=True):
         data = json.dumps(body).encode() if body is not None else None
@@ -126,6 +130,14 @@ class Framework:
             if not match:
                 raise RuntimeError(f"project {PROJECT_NAME} not configured yet")
             self.project_id = match[0]["id"]
+        if not self.flow_canonical_name:
+            versions = self.request("GET", f"/flows/{FLOW_ID}/versions")
+            published = [v for v in versions if v.get("status") == "published"]
+            if not published:
+                raise RuntimeError(f"flow {FLOW_ID} has no published version yet")
+            # highest (major, minor) wins, in case more than one version was ever published
+            best = max(published, key=lambda v: tuple(int(p) for p in v["version"].split(".")))
+            self.flow_canonical_name = best["canonical_name"]
 
     def launch(self, task):
         self.ready()
@@ -133,7 +145,7 @@ class Framework:
                    f"(task {task['key']}, reported by {task['reporter']} at {task['created_at']})")
         run = self.request("POST", "/runs", {
             "project_id": self.project_id,
-            "flow_canonical_name": FLOW,
+            "flow_canonical_name": self.flow_canonical_name,
             "feature_request": request,
             "publish_mode": "direct_push",            # straight to main -> live site
             "ai_session_mode": "isolated_attempt_sessions",

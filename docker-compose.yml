@@ -8,7 +8,8 @@ services:
     environment:
       FRAMEWORK_API: http://framework:8080/api
       FRAMEWORK_PUBLIC_URL: http://localhost:8080
-      FLOW: webapp-sdd@5.0   # keep in sync with framework/flow/webapp-sdd.yaml
+      # flow_id only; the board looks up whatever version the framework has published
+      FLOW_ID: webapp-sdd
     volumes: ["./shared:/shared"]
     depends_on: [framework]
 
